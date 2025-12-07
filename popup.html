@@ -2,49 +2,50 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Instagram Unfollower Checker</title>
+  <title>InstaManager</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Unfollower Checker</h1>
-      <button id="refreshBtn" class="refresh-btn">Refresh</button>
-    </header>
 
-    <div class="controls">
-      <div class="toggle-group">
-        <label class="toggle-switch">
-          <input type="checkbox" id="blockReels">
-          <span class="slider"></span>
-          <span class="label-text">Block Reels</span>
-        </label>
-      </div>
-      <div class="toggle-group">
-        <label class="toggle-switch">
-          <input type="checkbox" id="blockExplore">
-          <span class="slider"></span>
-          <span class="label-text">Block Explore</span>
-        </label>
-      </div>
+  <div class="header">
+    <h2>InstaManager</h2>
+    <p class="status" id="statusMsg">Ready to scan. (Reload Instagram if error persists)</p>
+  </div>
+
+  <div class="controls">
+    <button id="scanBtn" class="btn-primary">🔄 Scan Unfollowers</button>
+  </div>
+
+  <div class="filters" id="filterSection" style="display:none;">
+    <label class="toggle-container">
+      <input type="checkbox" id="filterPrivate">
+      <span class="checkmark"></span>
+      Show Private Only
+    </label>
+  </div>
+
+  <div id="resultsList" class="user-list">
+    <div class="placeholder">Click "Scan" to analyze your profile. <br><small>(Go to your profile page first)</small></div>
+  </div>
+
+  <div class="feed-manager">
+    <h3>Feed Blocker</h3>
+    <div class="toggle-row">
+      <span>🚫 Block Reels</span>
+      <label class="switch">
+        <input type="checkbox" id="blockReels">
+        <span class="slider round"></span>
+      </label>
     </div>
-
-    <div class="stats">
-      <div class="stat-item">
-        <span class="stat-label">Not Following Back:</span>
-        <span id="unfollowerCount" class="stat-value">0</span>
-      </div>
-    </div>
-
-    <div id="status" class="status">
-      <p>Click "Refresh" to check for unfollowers</p>
-    </div>
-
-    <div id="unfollowerList" class="unfollower-list">
-      <!-- Unfollowers will be listed here -->
+    <div class="toggle-row">
+      <span>🚫 Block Explore</span>
+      <label class="switch">
+        <input type="checkbox" id="blockExplore">
+        <span class="slider round"></span>
+      </label>
     </div>
   </div>
+
   <script src="popup.js"></script>
 </body>
 </html>
