@@ -41,6 +41,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     
   if (msg.action === "startScan") {
     runScanner();
+    // Return true to indicate the response (scanComplete) will be sent asynchronously.
     handled = true;
   }
     
@@ -129,12 +130,28 @@ async function runScanner() {
             return { username, isVerified };
         });
 
+        // --- CLOSE MODAL (The critical fix for channel closing) ---
         chrome.runtime.sendMessage({action: "statusUpdate", status: `Closing ${listName} modal...`});
-        const closeBtn = modalRole.querySelector('svg[aria-label="Close"]')?.closest('div[role="button"]');
-        if(closeBtn) closeBtn.click();
-        else console.error("Could not find modal close button.");
-        
-        await new Promise(r => setTimeout(r, 1000));
+        
+        // 1. Try to find the close button using multiple selectors
+        const closeBtn = modalRole.querySelector('svg[aria-label="Close"]')?.closest('div[role="button"]') ||
+                         modalRole.querySelector('svg[aria-label="Close"]')?.parentElement?.parentElement?.closest('div[role="button"]');
+
+        if(closeBtn) {
+            closeBtn.click();
+        } else {
+            console.error("Attempting fallback close...");
+            // 2. Fallback 1: Click the backdrop/area outside the modal content (often the parent of the dialog)
+            const backdrop = document.querySelector('div[role="dialog"]').parentElement.parentElement;
+            if (backdrop) {
+                backdrop.click();
+            } else {
+                // 3. Fallback 2: Send ESC keypress event
+                document.dispatchEvent(new KeyboardEvent('keydown', {'key': 'Escape'}));
+            }
+        }
+        
+        await new Promise(r => setTimeout(r, 1500));
         
         return users.filter(u => u.username !== 'unknown' && u.username !== '');
     }
