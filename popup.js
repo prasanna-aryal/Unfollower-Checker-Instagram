@@ -1,22 +1,24 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // --- Element Declarations ---
-    const scanBtn = document.getElementById('scanBtn');
-    const resultsList = document.getElementById('resultsList');
-    const statusMsg = document.getElementById('statusMsg');
-    const filterSection = document.getElementById('filterSection');
-    const filterPrivate = document.getElementById('filterPrivate');
-    
-    // Toggle Elements
-    const blockReels = document.getElementById('blockReels');
-    const blockExplore = document.getElementById('blockExplore');
+// Elements
+const refreshBtn = document.getElementById('refreshBtn');
+const darkModeToggle = document.getElementById('darkModeToggle');
+const blockReelsToggle = document.getElementById('blockReels');
+const blockExploreToggle = document.getElementById('blockExplore');
+const unfollowerList = document.getElementById('unfollowerList');
+const unfollowerCount = document.getElementById('unfollowerCount');
+const statusDiv = document.getElementById('status');
 
     let allUnfollowers = [];
 
-    // --- Load Saved Settings ---
-    chrome.storage.local.get(['blockReels', 'blockExplore'], (result) => {
-        if (blockReels) blockReels.checked = result.blockReels || false;
-        if (blockExplore) blockExplore.checked = result.blockExplore || false;
-    });
+// Load saved settings
+chrome.storage.sync.get(['blockReels', 'blockExplore', 'darkMode'], (result) => {
+  blockReelsToggle.checked = result.blockReels || false;
+  blockExploreToggle.checked = result.blockExplore || false;
+  
+  // Apply dark mode if enabled
+  if (result.darkMode) {
+    document.body.classList.add('dark-mode');
+  }
+});
 
     // --- Feed Block Logic ---
     const updateFeedSettings = () => {
@@ -36,8 +38,52 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    if (blockReels) blockReels.addEventListener('change', updateFeedSettings);
-    if (blockExplore) blockExplore.addEventListener('change', updateFeedSettings);
+// Dark mode toggle event listener
+darkModeToggle.addEventListener('click', () => {
+  document.body.classList.toggle('dark-mode');
+  const isDarkMode = document.body.classList.contains('dark-mode');
+  chrome.storage.sync.set({ darkMode: isDarkMode });
+});
+
+// Event listeners
+refreshBtn.addEventListener('click', async () => {
+  refreshBtn.disabled = true;
+  refreshBtn.textContent = 'Refreshing...';
+  statusDiv.className = 'status';
+  statusDiv.innerHTML = '<p>Fetching data from Instagram...</p>';
+  
+  try {
+    // Send message to content script to fetch data
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+    if (!isInstagramUrl(tab.url)) {
+      throw new Error('Please navigate to Instagram first');
+    }
+    
+    chrome.tabs.sendMessage(tab.id, { action: 'fetchUnfollowers' }, (response) => {
+      if (chrome.runtime.lastError) {
+        showStatus('Error: Please refresh the Instagram page and try again', 'error');
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = 'Refresh';
+        return;
+      }
+      
+      if (response && response.success) {
+        showStatus('Successfully updated unfollowers list', 'success');
+        loadUnfollowers();
+      } else {
+        showStatus(response?.error || 'Failed to fetch data', 'error');
+      }
+      
+      refreshBtn.disabled = false;
+      refreshBtn.textContent = 'Refresh';
+    });
+  } catch (error) {
+    showStatus(error.message, 'error');
+    refreshBtn.disabled = false;
+    refreshBtn.textContent = 'Refresh';
+  }
+});
 
 
     // --- Scanner Logic (with Recursive Connection Fix) ---

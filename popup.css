@@ -1,13 +1,137 @@
-body {
-    width: 300px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    padding: 10px;
-    background-color: #fafafa;
-    color: #262626;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
-.header h2 {
-    margin: 0 0 5px 0;
-    color: #3897f0;
+
+:root {
+  /* Light mode colors */
+  --bg-primary: #fafafa;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f0f0f0;
+  --text-primary: #262626;
+  --text-secondary: #8e8e8e;
+  --border-color: #dbdbdb;
+  --button-bg: #0095f6;
+  --button-hover: #1877f2;
+  --button-text: #ffffff;
+  --status-warning-bg: #fff3cd;
+  --status-warning-border: #ffc107;
+  --status-warning-text: #856404;
+  --status-success-bg: #d4edda;
+  --status-success-border: #28a745;
+  --status-success-text: #155724;
+  --status-error-bg: #f8d7da;
+  --status-error-border: #dc3545;
+  --status-error-text: #721c24;
+  --scrollbar-track: #fafafa;
+  --scrollbar-thumb: #dbdbdb;
+  --scrollbar-thumb-hover: #b3b3b3;
+}
+
+body.dark-mode {
+  /* Dark mode colors */
+  --bg-primary: #121212;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #262626;
+  --text-primary: #fafafa;
+  --text-secondary: #a8a8a8;
+  --border-color: #363636;
+  --button-bg: #0095f6;
+  --button-hover: #1877f2;
+  --button-text: #ffffff;
+  --status-warning-bg: #3d3000;
+  --status-warning-border: #ffc107;
+  --status-warning-text: #ffd966;
+  --status-success-bg: #0d3818;
+  --status-success-border: #28a745;
+  --status-success-text: #8bda9c;
+  --status-error-bg: #3d0a0f;
+  --status-error-border: #dc3545;
+  --status-error-text: #f8a5ae;
+  --scrollbar-track: #121212;
+  --scrollbar-thumb: #363636;
+  --scrollbar-thumb-hover: #4a4a4a;
+}
+
+body {
+  width: 400px;
+  min-height: 500px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg-primary);
+  transition: background 0.3s ease;
+}
+
+.container {
+  padding: 16px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dark-mode-btn {
+  padding: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  width: 36px;
+  height: 36px;
+}
+
+.dark-mode-btn:hover {
+  background: var(--bg-tertiary);
+}
+
+.dark-mode-btn .sun-icon {
+  display: none;
+}
+
+body.dark-mode .dark-mode-btn .moon-icon {
+  display: none;
+}
+
+body.dark-mode .dark-mode-btn .sun-icon {
+  display: block;
+}
+
+.refresh-btn {
+  padding: 8px 16px;
+  background: var(--button-bg);
+  color: var(--button-text);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.refresh-btn:hover {
+  background: var(--button-hover);
 }
 .status {
     font-size: 12px;
@@ -15,103 +139,26 @@ body {
     margin-bottom: 10px;
 }
 .controls {
-    margin-bottom: 15px;
-}
-.btn-primary {
-    width: 100%;
-    padding: 8px;
-    background-color: #0095f6;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    cursor: pointer;
-}
-.btn-primary:disabled {
-    background-color: #b2dffc;
-    cursor: default;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
 }
 
-/* --- User List Styles --- */
-.user-list {
-    max-height: 250px;
-    overflow-y: auto;
-    border-top: 1px solid #dbdbdb;
-    margin-top: 10px;
-}
-.placeholder {
-    padding: 15px;
-    text-align: center;
-    color: #8e8e8e;
-    font-size: 13px;
-}
-.user-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid #efefef;
-}
-.user-item:last-child {
-    border-bottom: none;
-}
-.user-info {
-    display: flex;
-    flex-direction: column;
-}
-.username {
-    font-weight: 600;
-    font-size: 14px;
-}
-.badges {
-    margin-top: 3px;
-}
-.badge {
-    display: inline-block;
-    padding: 2px 4px;
-    border-radius: 3px;
-    font-size: 10px;
-    font-weight: bold;
-    color: white;
-}
-.private {
-    background-color: #ff9900;
-}
-.verified {
-    background-color: #0095f6;
+.toggle-group {
+  margin-bottom: 12px;
 }
 
-/* --- Feed Manager & Toggles --- */
-.feed-manager {
-    border-top: 1px solid #dbdbdb;
-    padding-top: 10px;
-    margin-top: 15px;
-}
-.feed-manager h3 {
-    font-size: 14px;
-    margin: 0 0 10px 0;
-    color: #444;
-}
-.toggle-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 0;
-    font-size: 13px;
-}
-.filters {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    font-size: 13px;
+.toggle-group:last-child {
+  margin-bottom: 0;
 }
 
-/* Custom Toggle Switch (using existing class structure) */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 34px;
-  height: 20px;
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
 }
 .switch input {
   opacity: 0;
@@ -135,30 +182,200 @@ body {
   height: 14px;
   width: 14px;
   left: 3px;
-  bottom: 3px;
-  background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
+  transition: transform 0.3s;
+}
+
+.toggle-switch input[type="checkbox"]:checked + .slider {
+  background: var(--button-bg);
 }
 input:checked + .slider {
   background-color: #0095f6;
 }
-input:checked + .slider:before {
-  -webkit-transform: translateX(14px);
-  -ms-transform: translateX(14px);
-  transform: translateX(14px);
-}
-.slider.round {
-  border-radius: 34px;
-}
-.slider.round:before {
-  border-radius: 50%;
+
+.label-text {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
 }
 
-/* Custom Checkbox (For filterPrivate) */
-.toggle-container input {
-    margin-right: 5px;
-    opacity: 1; /* Make standard checkbox visible */
-    width: auto;
-    height: auto;
+.stats {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.status {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--status-warning-bg);
+  border: 1px solid var(--status-warning-border);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.status p {
+  font-size: 13px;
+  color: var(--status-warning-text);
+}
+
+.status.success {
+  background: var(--status-success-bg);
+  border-color: var(--status-success-border);
+}
+
+.status.success p {
+  color: var(--status-success-text);
+}
+
+.status.error {
+  background: var(--status-error-bg);
+  border-color: var(--status-error-border);
+}
+
+.status.error p {
+  color: var(--status-error-text);
+}
+
+.unfollower-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.unfollower-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.unfollower-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.unfollower-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  margin-right: 12px;
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+}
+
+.unfollower-info {
+  flex: 1;
+}
+
+.unfollower-username {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
+.verified-badge svg {
+  width: 100%;
+  height: 100%;
+}
+
+.unfollower-status {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.status-badge {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.status-badge.following {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-badge.private {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.status-badge.public {
+  background: #e8f5e9;
+  color: #388e3c;
+}
+
+.unfollow-btn {
+  padding: 6px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+  transition: all 0.2s;
+}
+
+.unfollow-btn:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--text-primary);
+}
+
+.unfollow-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Scrollbar styling */
+.unfollower-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.unfollower-list::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 4px;
+}
+
+.unfollower-list::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+.unfollower-list::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }
