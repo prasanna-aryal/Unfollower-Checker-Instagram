@@ -31,7 +31,7 @@
 
 body.dark-mode {
   /* Dark mode colors */
-  --bg-primary: #000000;
+  --bg-primary: #121212;
   --bg-secondary: #1a1a1a;
   --bg-tertiary: #262626;
   --text-primary: #fafafa;
@@ -49,7 +49,7 @@ body.dark-mode {
   --status-error-bg: #3d0a0f;
   --status-error-border: #dc3545;
   --status-error-text: #f8a5ae;
-  --scrollbar-track: #000000;
+  --scrollbar-track: #121212;
   --scrollbar-thumb: #363636;
   --scrollbar-thumb-hover: #4a4a4a;
 }
