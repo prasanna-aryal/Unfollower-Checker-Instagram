@@ -234,54 +234,45 @@ function extractUsersFromPage(type) {
 
 // Unfollow a user
 async function unfollowUser(username) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const currentPath = window.location.pathname;
-      const userProfilePath = `/${username}/`;
-      
-      // Check if we're already on the profile
-      if (currentPath !== userProfilePath && currentPath !== `/${username}`) {
-        reject(new Error(`Please navigate to ${username}'s profile first to unfollow them.`));
-        return;
-      }
-      
-      // Find and click the Following button
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const buttons = Array.from(document.querySelectorAll('button'));
-      const followingButton = buttons.find(btn => 
-        btn.textContent.includes('Following') || 
-        btn.textContent.includes('Requested')
-      );
-      
-      if (!followingButton) {
-        reject(new Error('Could not find Following button. Please navigate to the user\'s profile.'));
-        return;
-      }
-      
-      // Click the button
-      followingButton.click();
-      
-      // Wait for confirmation dialog
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Find and click the Unfollow confirmation button
-      const confirmButtons = Array.from(document.querySelectorAll('button'));
-      const unfollowButton = confirmButtons.find(btn => 
-        btn.textContent.includes('Unfollow')
-      );
-      
-      if (unfollowButton) {
-        unfollowButton.click();
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        resolve();
-      } else {
-        reject(new Error('Could not find Unfollow confirmation button'));
-      }
-    } catch (error) {
-      reject(error);
-    }
-  });
+  const currentPath = window.location.pathname;
+  const userProfilePath = `/${username}/`;
+  
+  // Check if we're already on the profile
+  if (currentPath !== userProfilePath && currentPath !== `/${username}`) {
+    throw new Error(`Please navigate to ${username}'s profile first to unfollow them.`);
+  }
+  
+  // Find and click the Following button
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  const buttons = Array.from(document.querySelectorAll('button'));
+  const followingButton = buttons.find(btn => 
+    btn.textContent.includes('Following') || 
+    btn.textContent.includes('Requested')
+  );
+  
+  if (!followingButton) {
+    throw new Error('Could not find Following button. Please navigate to the user\'s profile.');
+  }
+  
+  // Click the button
+  followingButton.click();
+  
+  // Wait for confirmation dialog
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Find and click the Unfollow confirmation button
+  const confirmButtons = Array.from(document.querySelectorAll('button'));
+  const unfollowButton = confirmButtons.find(btn => 
+    btn.textContent.includes('Unfollow')
+  );
+  
+  if (unfollowButton) {
+    unfollowButton.click();
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  } else {
+    throw new Error('Could not find Unfollow confirmation button');
+  }
 }
 
 // Block Reels from the feed
