@@ -41,7 +41,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     
   if (msg.action === "startScan") {
     runScanner();
-    // Return true to indicate the response (scanComplete) will be sent asynchronously.
     handled = true;
   }
     
@@ -76,4 +75,87 @@ function waitForElement(selector, timeout = 5000) {
 
 async function runScanner() {
   try {
-    chrome.runtime.sendMessage({action: "statusUpdate
+    chrome.runtime.sendMessage({action: "statusUpdate", status: "Finding profile links..."});
+    
+    const links = Array.from(document.querySelectorAll('a'));
+    const followingLink = links.find(a => a.innerText.toLowerCase().includes("following"));
+    const followersLink = links.find(a => a.innerText.toLowerCase().includes("followers"));
+
+    if (!followingLink || !followersLink) {
+      chrome.runtime.sendMessage({action: "statusUpdate", status: "Error: Go to your profile page first!"});
+      return;
+    }
+
+    async function scrapeList(linkElement, listName) {
+        chrome.runtime.sendMessage({action: "statusUpdate", status: `Opening ${listName}...`});
+        linkElement.click();
+        
+        const modalRole = await waitForElement('div[role="dialog"]');
+        
+        const scrollableDiv = modalRole.querySelector('div[style*="overflow-y:"]') || modalRole.querySelector('div[style*="overflow: hidden auto"]') || modalRole.firstChild.querySelector('div');
+        
+        if(!scrollableDiv) throw new Error("Scroll area not found. Instagram structure likely changed.");
+
+        chrome.runtime.sendMessage({action: "statusUpdate", status: `Scrolling and scraping ${listName}...`});
+        
+        let previousHeight = 0;
+        let sameHeightCount = 0;
+        
+        while(sameHeightCount < 5) {
+            scrollableDiv.scrollTop = scrollableDiv.scrollHeight;
+            await new Promise(r => setTimeout(r, 2000));
+            
+            let currentHeight = scrollableDiv.scrollHeight;
+            if (currentHeight === previousHeight) {
+                sameHeightCount++;
+            } else {
+                sameHeightCount = 0;
+            }
+            previousHeight = currentHeight;
+        }
+
+        const items = Array.from(modalRole.querySelectorAll('div[role="listitem"], li')); 
+        
+        if (items.length === 0) {
+            chrome.runtime.sendMessage({action: "statusUpdate", status: `${listName} list is empty or selector failed.`});
+        }
+        
+        const users = items.map(item => {
+            const anchor = item.querySelector('a[role="link"]');
+            const username = anchor ? anchor.getAttribute('href').replace(/\//g, '') : "unknown";
+            
+            const isVerified = !!item.querySelector('svg[aria-label="Verified"]');
+            
+            return { username, isVerified };
+        });
+
+        chrome.runtime.sendMessage({action: "statusUpdate", status: `Closing ${listName} modal...`});
+        const closeBtn = modalRole.querySelector('svg[aria-label="Close"]')?.closest('div[role="button"]');
+        if(closeBtn) closeBtn.click();
+        else console.error("Could not find modal close button.");
+        
+        await new Promise(r => setTimeout(r, 1000));
+        
+        return users.filter(u => u.username !== 'unknown' && u.username !== '');
+    }
+
+    const following = await scrapeList(followingLink, "Following");
+    
+    const followers = await scrapeList(followersLink, "Followers");
+
+    const followerUsernames = new Set(followers.map(u => u.username));
+    
+    let unfollowers = following.filter(u => !followerUsernames.has(u.username));
+
+    unfollowers = unfollowers.map(u => ({...u, isPrivate: false})); 
+
+    chrome.runtime.sendMessage({
+      action: "scanComplete",
+      data: unfollowers
+    });
+
+  } catch (err) {
+    console.error("Scanner error:", err);
+    chrome.runtime.sendMessage({action: "statusUpdate", status: "Fatal Error: " + err.message});
+  }
+}
