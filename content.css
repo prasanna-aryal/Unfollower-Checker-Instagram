@@ -1,0 +1,12 @@
+/* Content script styles for Instagram Unfollower Checker */
+
+/* Ensure blocked elements are hidden */
+[data-blocked-by-extension] {
+  display: none !important;
+}
+
+/* Style for the extension unfollow button on profiles */
+.extension-unfollow-btn:hover {
+  background: #fafafa !important;
+  border-color: #262626 !important;
+}
