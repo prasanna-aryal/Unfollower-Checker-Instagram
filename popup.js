@@ -1,5 +1,6 @@
 // Elements
 const refreshBtn = document.getElementById('refreshBtn');
+const darkModeToggle = document.getElementById('darkModeToggle');
 const blockReelsToggle = document.getElementById('blockReels');
 const blockExploreToggle = document.getElementById('blockExplore');
 const unfollowerList = document.getElementById('unfollowerList');
@@ -18,13 +19,25 @@ function isInstagramUrl(url) {
 }
 
 // Load saved settings
-chrome.storage.sync.get(['blockReels', 'blockExplore'], (result) => {
+chrome.storage.sync.get(['blockReels', 'blockExplore', 'darkMode'], (result) => {
   blockReelsToggle.checked = result.blockReels || false;
   blockExploreToggle.checked = result.blockExplore || false;
+  
+  // Apply dark mode if enabled
+  if (result.darkMode) {
+    document.body.classList.add('dark-mode');
+  }
 });
 
 // Load unfollowers data
 loadUnfollowers();
+
+// Dark mode toggle event listener
+darkModeToggle.addEventListener('click', () => {
+  document.body.classList.toggle('dark-mode');
+  const isDarkMode = document.body.classList.contains('dark-mode');
+  chrome.storage.sync.set({ darkMode: isDarkMode });
+});
 
 // Event listeners
 refreshBtn.addEventListener('click', async () => {

@@ -4,11 +4,62 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* Light mode colors */
+  --bg-primary: #fafafa;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f0f0f0;
+  --text-primary: #262626;
+  --text-secondary: #8e8e8e;
+  --border-color: #dbdbdb;
+  --button-bg: #0095f6;
+  --button-hover: #1877f2;
+  --button-text: #ffffff;
+  --status-warning-bg: #fff3cd;
+  --status-warning-border: #ffc107;
+  --status-warning-text: #856404;
+  --status-success-bg: #d4edda;
+  --status-success-border: #28a745;
+  --status-success-text: #155724;
+  --status-error-bg: #f8d7da;
+  --status-error-border: #dc3545;
+  --status-error-text: #721c24;
+  --scrollbar-track: #fafafa;
+  --scrollbar-thumb: #dbdbdb;
+  --scrollbar-thumb-hover: #b3b3b3;
+}
+
+body.dark-mode {
+  /* Dark mode colors */
+  --bg-primary: #000000;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #262626;
+  --text-primary: #fafafa;
+  --text-secondary: #a8a8a8;
+  --border-color: #363636;
+  --button-bg: #0095f6;
+  --button-hover: #1877f2;
+  --button-text: #ffffff;
+  --status-warning-bg: #3d3000;
+  --status-warning-border: #ffc107;
+  --status-warning-text: #ffd966;
+  --status-success-bg: #0d3818;
+  --status-success-border: #28a745;
+  --status-success-text: #8bda9c;
+  --status-error-bg: #3d0a0f;
+  --status-error-border: #dc3545;
+  --status-error-text: #f8a5ae;
+  --scrollbar-track: #000000;
+  --scrollbar-thumb: #363636;
+  --scrollbar-thumb-hover: #4a4a4a;
+}
+
 body {
   width: 400px;
   min-height: 500px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background: #fafafa;
+  background: var(--bg-primary);
+  transition: background 0.3s ease;
 }
 
 .container {
@@ -21,19 +72,56 @@ header {
   align-items: center;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #dbdbdb;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 h1 {
   font-size: 18px;
   font-weight: 600;
-  color: #262626;
+  color: var(--text-primary);
+}
+
+.dark-mode-btn {
+  padding: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  width: 36px;
+  height: 36px;
+}
+
+.dark-mode-btn:hover {
+  background: var(--bg-tertiary);
+}
+
+.dark-mode-btn .sun-icon {
+  display: none;
+}
+
+body.dark-mode .dark-mode-btn .moon-icon {
+  display: none;
+}
+
+body.dark-mode .dark-mode-btn .sun-icon {
+  display: block;
 }
 
 .refresh-btn {
   padding: 8px 16px;
-  background: #0095f6;
-  color: white;
+  background: var(--button-bg);
+  color: var(--button-text);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -43,7 +131,7 @@ h1 {
 }
 
 .refresh-btn:hover {
-  background: #1877f2;
+  background: var(--button-hover);
 }
 
 .refresh-btn:disabled {
@@ -54,9 +142,9 @@ h1 {
 .controls {
   margin-bottom: 16px;
   padding: 12px;
-  background: white;
+  background: var(--bg-secondary);
   border-radius: 8px;
-  border: 1px solid #dbdbdb;
+  border: 1px solid var(--border-color);
 }
 
 .toggle-group {
@@ -101,7 +189,7 @@ h1 {
 }
 
 .toggle-switch input[type="checkbox"]:checked + .slider {
-  background: #0095f6;
+  background: var(--button-bg);
 }
 
 .toggle-switch input[type="checkbox"]:checked + .slider::before {
@@ -110,16 +198,16 @@ h1 {
 
 .label-text {
   font-size: 14px;
-  color: #262626;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
 .stats {
   margin-bottom: 16px;
   padding: 12px;
-  background: white;
+  background: var(--bg-secondary);
   border-radius: 8px;
-  border: 1px solid #dbdbdb;
+  border: 1px solid var(--border-color);
 }
 
 .stat-item {
@@ -130,45 +218,45 @@ h1 {
 
 .stat-label {
   font-size: 14px;
-  color: #8e8e8e;
+  color: var(--text-secondary);
 }
 
 .stat-value {
   font-size: 18px;
   font-weight: 600;
-  color: #262626;
+  color: var(--text-primary);
 }
 
 .status {
   margin-bottom: 16px;
   padding: 12px;
-  background: #fff3cd;
-  border: 1px solid #ffc107;
+  background: var(--status-warning-bg);
+  border: 1px solid var(--status-warning-border);
   border-radius: 8px;
   text-align: center;
 }
 
 .status p {
   font-size: 13px;
-  color: #856404;
+  color: var(--status-warning-text);
 }
 
 .status.success {
-  background: #d4edda;
-  border-color: #28a745;
+  background: var(--status-success-bg);
+  border-color: var(--status-success-border);
 }
 
 .status.success p {
-  color: #155724;
+  color: var(--status-success-text);
 }
 
 .status.error {
-  background: #f8d7da;
-  border-color: #dc3545;
+  background: var(--status-error-bg);
+  border-color: var(--status-error-border);
 }
 
 .status.error p {
-  color: #721c24;
+  color: var(--status-error-text);
 }
 
 .unfollower-list {
@@ -181,14 +269,14 @@ h1 {
   align-items: center;
   padding: 12px;
   margin-bottom: 8px;
-  background: white;
-  border: 1px solid #dbdbdb;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   transition: background 0.2s;
 }
 
 .unfollower-item:hover {
-  background: #fafafa;
+  background: var(--bg-tertiary);
 }
 
 .unfollower-avatar {
@@ -197,7 +285,7 @@ h1 {
   border-radius: 50%;
   margin-right: 12px;
   object-fit: cover;
-  border: 1px solid #dbdbdb;
+  border: 1px solid var(--border-color);
 }
 
 .unfollower-info {
@@ -207,7 +295,7 @@ h1 {
 .unfollower-username {
   font-size: 14px;
   font-weight: 600;
-  color: #262626;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -257,19 +345,19 @@ h1 {
 
 .unfollow-btn {
   padding: 6px 12px;
-  background: white;
-  border: 1px solid #dbdbdb;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
   font-size: 13px;
-  color: #262626;
+  color: var(--text-primary);
   transition: all 0.2s;
 }
 
 .unfollow-btn:hover {
-  background: #fafafa;
-  border-color: #262626;
+  background: var(--bg-tertiary);
+  border-color: var(--text-primary);
 }
 
 .unfollow-btn:disabled {
@@ -283,15 +371,15 @@ h1 {
 }
 
 .unfollower-list::-webkit-scrollbar-track {
-  background: #fafafa;
+  background: var(--scrollbar-track);
   border-radius: 4px;
 }
 
 .unfollower-list::-webkit-scrollbar-thumb {
-  background: #dbdbdb;
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 
 .unfollower-list::-webkit-scrollbar-thumb:hover {
-  background: #b3b3b3;
+  background: var(--scrollbar-thumb-hover);
 }
