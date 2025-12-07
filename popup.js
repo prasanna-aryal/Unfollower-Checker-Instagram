@@ -89,4 +89,67 @@ document.addEventListener('DOMContentLoaded', () => {
         scanBtn.addEventListener('click', () => {
             chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
                 const tab = tabs[0];
-                if (!tab.url.includes
+                if (!tab.url.includes("instagram.com")) {
+                    statusMsg.textContent = "Error: Please go to Instagram.com";
+                    return;
+                }
+
+                scanBtn.disabled = true;
+                retryCount = 0; 
+                establishConnectionAndScan(tab.id); // Start the recursive process
+            });
+        });
+    }
+
+
+    // Listen for data back from content script
+    chrome.runtime.onMessage.addListener((message) => {
+        if (message.action === "scanComplete") {
+            allUnfollowers = message.data;
+            renderList(allUnfollowers);
+            if (filterSection) filterSection.style.display = 'flex';
+            if (statusMsg) statusMsg.textContent = `Found ${allUnfollowers.length} unfollowers.`;
+            if (scanBtn) scanBtn.disabled = false;
+        } else if (message.action === "statusUpdate") {
+            if (statusMsg) statusMsg.textContent = message.status;
+        }
+    });
+
+    // --- Filtering Logic ---
+    if (filterPrivate) { 
+        filterPrivate.addEventListener('change', () => {
+            if (filterPrivate.checked) {
+                const privateOnly = allUnfollowers.filter(u => u.isPrivate);
+                renderList(privateOnly);
+            } else {
+                renderList(allUnfollowers);
+            }
+        });
+    }
+
+    function renderList(users) {
+        if (!resultsList) return; 
+        
+        resultsList.innerHTML = '';
+        if (users.length === 0) {
+            resultsList.innerHTML = '<div class="placeholder">No users found.</div>';
+            return;
+        }
+
+        users.forEach(user => {
+            const isPrivateHTML = user.isPrivate ? '<span class="badge private">Private</span>' : '';
+            const isVerifiedHTML = user.isVerified ? '<span class="badge verified">Verified</span>' : '';
+            
+            const item = document.createElement('div');
+            item.className = 'user-item';
+            item.innerHTML = `
+                <div class="user-info">
+                <span class="username">@${user.username}</span>
+                <div class="badges">${isPrivateHTML}${isVerifiedHTML}</div>
+                </div>
+                <a href="https://instagram.com/${user.username}" target="_blank" style="text-decoration:none; color:#0095f6; font-size:12px;">View</a>
+            `;
+            resultsList.appendChild(item);
+        });
+    }
+});
