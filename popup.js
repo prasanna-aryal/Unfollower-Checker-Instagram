@@ -72,15 +72,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Connection successful! Proceed with the scan message.
                     statusMsg.textContent = "Connection established. Scanning... (Do not close popup)";
                     
-                    // Add a final, small delay before sending the message for absolute stability
+                    // Final stability delay
                     setTimeout(() => {
-                        chrome.tabs.sendMessage(tabId, { action: "startScan" }, (response) => {
-                            if (chrome.runtime.lastError) {
-                                console.error("Scan message failed:", chrome.runtime.lastError.message);
-                                statusMsg.textContent = "Scan error after connect. Try again.";
-                                scanBtn.disabled = false;
-                            }
-                        });
+                        // FIX: We remove the callback. The content script returns 'true' for async handling 
+                        // and will send the final 'scanComplete' message separately.
+                        chrome.tabs.sendMessage(tabId, { action: "startScan" });
                     }, 500);
                 }
             });
