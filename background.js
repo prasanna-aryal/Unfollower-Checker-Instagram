@@ -4,23 +4,23 @@
 chrome.runtime.onInstalled.addListener(() => {
   console.log('Instagram Unfollower Checker installed');
   
-  // Initialize default settings
-  chrome.storage.sync.get(['blockReels', 'blockExplore'], (result) => {
+  // Initialize default settings (using local storage for toggles)
+  chrome.storage.local.get(['blockReels', 'blockExplore'], (result) => {
     if (result.blockReels === undefined) {
-      chrome.storage.sync.set({ blockReels: false });
+      chrome.storage.local.set({ blockReels: false });
     }
     if (result.blockExplore === undefined) {
-      chrome.storage.sync.set({ blockExplore: false });
+      chrome.storage.local.set({ blockExplore: false });
     }
   });
 });
 
-// Listen for messages from content script or popup
+// Listen for general messages (Critical for fixing "Receiving end does not exist" error)
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  // Handle any background tasks if needed
   if (request.action === 'log') {
     console.log(request.message);
   }
   
+  // Returning true indicates that the response may be sent asynchronously.
   return true;
 });

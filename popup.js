@@ -7,16 +7,7 @@ const unfollowerList = document.getElementById('unfollowerList');
 const unfollowerCount = document.getElementById('unfollowerCount');
 const statusDiv = document.getElementById('status');
 
-// Helper function to validate Instagram URLs
-function isInstagramUrl(url) {
-  if (!url) return false;
-  try {
-    const urlObj = new URL(url);
-    return urlObj.hostname === 'www.instagram.com' || urlObj.hostname === 'instagram.com';
-  } catch (e) {
-    return false;
-  }
-}
+    let allUnfollowers = [];
 
 // Load saved settings
 chrome.storage.sync.get(['blockReels', 'blockExplore', 'darkMode'], (result) => {
@@ -29,8 +20,23 @@ chrome.storage.sync.get(['blockReels', 'blockExplore', 'darkMode'], (result) => 
   }
 });
 
-// Load unfollowers data
-loadUnfollowers();
+    // --- Feed Block Logic ---
+    const updateFeedSettings = () => {
+        const settings = {
+            blockReels: blockReels ? blockReels.checked : false,
+            blockExplore: blockExplore ? blockExplore.checked : false
+        };
+        chrome.storage.local.set(settings);
+        
+        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+            if(tabs[0]) {
+                chrome.tabs.sendMessage(tabs[0].id, {
+                    action: "updateFeed", 
+                    settings: settings
+                });
+            }
+        });
+    };
 
 // Dark mode toggle event listener
 darkModeToggle.addEventListener('click', () => {
@@ -79,184 +85,113 @@ refreshBtn.addEventListener('click', async () => {
   }
 });
 
-blockReelsToggle.addEventListener('change', async () => {
-  const enabled = blockReelsToggle.checked;
-  chrome.storage.sync.set({ blockReels: enabled });
-  
-  // Send message to content script
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (isInstagramUrl(tab.url)) {
-    chrome.tabs.sendMessage(tab.id, { 
-      action: 'toggleReels', 
-      enabled: enabled 
-    });
-  }
-});
 
-blockExploreToggle.addEventListener('change', async () => {
-  const enabled = blockExploreToggle.checked;
-  chrome.storage.sync.set({ blockExplore: enabled });
-  
-  // Send message to content script
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (isInstagramUrl(tab.url)) {
-    chrome.tabs.sendMessage(tab.id, { 
-      action: 'toggleExplore', 
-      enabled: enabled 
-    });
-  }
-});
+    // --- Scanner Logic (with Recursive Connection Fix) ---
+    if (scanBtn) { 
+        const MAX_RETRIES = 5;
+        let retryCount = 0;
 
-function loadUnfollowers() {
-  chrome.storage.local.get(['unfollowers'], (result) => {
-    const unfollowers = result.unfollowers || [];
-    unfollowerCount.textContent = unfollowers.length;
-    displayUnfollowers(unfollowers);
-  });
-}
+        // Function to handle recursive connection attempts
+        const establishConnectionAndScan = (tabId) => {
+            statusMsg.textContent = `Checking connection... Attempt ${retryCount + 1}/${MAX_RETRIES}`;
+            
+            chrome.scripting.executeScript({
+                target: { tabId: tabId },
+                func: () => { 
+                    // This function runs inside the content script's context
+                    return true; 
+                }
+            }, (results) => {
+                if (chrome.runtime.lastError || !results || results.length === 0) {
+                    // Connection failed or script execution failed
+                    if (retryCount < MAX_RETRIES) {
+                        retryCount++;
+                        // Wait longer before retrying (1.5s, 3s, 4.5s, etc.)
+                        setTimeout(() => establishConnectionAndScan(tabId), 1500 * retryCount);
+                    } else {
+                        // Max retries reached, fail gracefully
+                        console.error("Messaging failed after maximum retries:", chrome.runtime.lastError ? chrome.runtime.lastError.message : "No result returned.");
+                        statusMsg.textContent = "Fatal Connection Error. Please refresh Instagram and reopen the popup.";
+                        scanBtn.disabled = false;
+                    }
+                } else {
+                    // Connection successful! Proceed with the scan message.
+                    statusMsg.textContent = "Connection established. Scanning... (Do not close popup)";
+                    
+                    // Final stability delay
+                    setTimeout(() => {
+                        // FIX: We remove the callback. The content script returns 'true' for async handling 
+                        // and will send the final 'scanComplete' message separately.
+                        chrome.tabs.sendMessage(tabId, { action: "startScan" });
+                    }, 500);
+                }
+            });
+        };
 
-function displayUnfollowers(unfollowers) {
-  if (unfollowers.length === 0) {
-    unfollowerList.innerHTML = '<div class="status"><p>No unfollowers found. Click "Refresh" to scan.</p></div>';
-    return;
-  }
-  
-  // Clear existing content
-  unfollowerList.innerHTML = '';
-  
-  unfollowers.forEach(user => {
-    const item = document.createElement('div');
-    item.className = 'unfollower-item';
-    item.setAttribute('data-user-id', escapeHtml(user.id));
-    
-    // Create avatar
-    const avatar = document.createElement('img');
-    avatar.className = 'unfollower-avatar';
-    avatar.src = user.profile_pic_url || 'icons/default-avatar.png';
-    avatar.alt = escapeHtml(user.username);
-    avatar.onerror = function() { this.src = 'icons/default-avatar.png'; };
-    
-    // Create info container
-    const info = document.createElement('div');
-    info.className = 'unfollower-info';
-    
-    // Username container
-    const usernameDiv = document.createElement('div');
-    usernameDiv.className = 'unfollower-username';
-    
-    const usernameSpan = document.createElement('span');
-    usernameSpan.textContent = user.username;
-    usernameDiv.appendChild(usernameSpan);
-    
-    // Verified badge
-    if (user.is_verified) {
-      const verifiedBadge = document.createElement('span');
-      verifiedBadge.className = 'verified-badge';
-      verifiedBadge.innerHTML = `
-        <svg aria-label="Verified" fill="rgb(0, 149, 246)" height="12" role="img" viewBox="0 0 40 40" width="12">
-          <path d="M19.998 3.094 14.638 0l-2.972 5.15H5.432v6.354L0 14.64 3.094 20 0 25.359l5.432 3.137v5.905h5.975L14.638 40l5.36-3.094L25.358 40l3.232-5.6h6.162v-6.01L40 25.359 36.905 20 40 14.641l-5.248-3.03v-6.46h-6.419L25.358 0l-5.36 3.094Zm7.415 11.225 2.254 2.287-11.43 11.5-6.835-6.93 2.244-2.258 4.587 4.581 9.18-9.18Z" fill-rule="evenodd"></path>
-        </svg>
-      `;
-      usernameDiv.appendChild(verifiedBadge);
-    }
-    
-    // Status badges
-    const statusDiv = document.createElement('div');
-    statusDiv.className = 'unfollower-status';
-    
-    const followingBadge = document.createElement('span');
-    followingBadge.className = 'status-badge following';
-    followingBadge.textContent = 'Following';
-    
-    const privacyBadge = document.createElement('span');
-    privacyBadge.className = `status-badge ${user.is_private ? 'private' : 'public'}`;
-    privacyBadge.textContent = user.is_private ? 'Private' : 'Public';
-    
-    statusDiv.appendChild(followingBadge);
-    statusDiv.appendChild(privacyBadge);
-    
-    info.appendChild(usernameDiv);
-    info.appendChild(statusDiv);
-    
-    // Unfollow button
-    const unfollowBtn = document.createElement('button');
-    unfollowBtn.className = 'unfollow-btn';
-    unfollowBtn.textContent = 'Unfollow';
-    unfollowBtn.setAttribute('data-username', user.username);
-    unfollowBtn.addEventListener('click', async (e) => {
-      const username = e.target.dataset.username;
-      if (confirm(`Are you sure you want to unfollow @${username}?`)) {
-        await unfollowUser(username, e.target);
-      }
-    });
-    
-    item.appendChild(avatar);
-    item.appendChild(info);
-    item.appendChild(unfollowBtn);
-    
-    unfollowerList.appendChild(item);
-  });
-}
+        scanBtn.addEventListener('click', () => {
+            chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+                const tab = tabs[0];
+                if (!tab.url.includes("instagram.com")) {
+                    statusMsg.textContent = "Error: Please go to Instagram.com";
+                    return;
+                }
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-async function unfollowUser(username, button) {
-  button.disabled = true;
-  button.textContent = 'Unfollowing...';
-  
-  try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
-    chrome.tabs.sendMessage(tab.id, { 
-      action: 'unfollowUser', 
-      username: username 
-    }, (response) => {
-      if (chrome.runtime.lastError) {
-        showStatus('Error: Please refresh the Instagram page and try again', 'error');
-        button.disabled = false;
-        button.textContent = 'Unfollow';
-        return;
-      }
-      
-      if (response && response.success) {
-        // Remove from list
-        const item = button.closest('.unfollower-item');
-        item.remove();
-        
-        // Update count
-        const currentCount = parseInt(unfollowerCount.textContent);
-        unfollowerCount.textContent = Math.max(0, currentCount - 1);
-        
-        showStatus(`Successfully unfollowed @${username}`, 'success');
-        
-        // Update stored data
-        chrome.storage.local.get(['unfollowers'], (result) => {
-          const unfollowers = (result.unfollowers || []).filter(u => u.username !== username);
-          chrome.storage.local.set({ unfollowers });
+                scanBtn.disabled = true;
+                retryCount = 0; 
+                establishConnectionAndScan(tab.id); // Start the recursive process
+            });
         });
-      } else {
-        showStatus(response?.error || 'Failed to unfollow user', 'error');
-        button.disabled = false;
-        button.textContent = 'Unfollow';
-      }
-    });
-  } catch (error) {
-    showStatus(error.message, 'error');
-    button.disabled = false;
-    button.textContent = 'Unfollow';
-  }
-}
+    }
 
-function showStatus(message, type = '') {
-  statusDiv.className = `status ${type}`;
-  statusDiv.innerHTML = `<p>${escapeHtml(message)}</p>`;
-  
-  setTimeout(() => {
-    statusDiv.className = 'status';
-    statusDiv.innerHTML = '<p>Ready</p>';
-  }, 5000);
-}
+
+    // Listen for data back from content script
+    chrome.runtime.onMessage.addListener((message) => {
+        if (message.action === "scanComplete") {
+            allUnfollowers = message.data;
+            renderList(allUnfollowers);
+            if (filterSection) filterSection.style.display = 'flex';
+            if (statusMsg) statusMsg.textContent = `Found ${allUnfollowers.length} unfollowers.`;
+            if (scanBtn) scanBtn.disabled = false;
+        } else if (message.action === "statusUpdate") {
+            if (statusMsg) statusMsg.textContent = message.status;
+        }
+    });
+
+    // --- Filtering Logic ---
+    if (filterPrivate) { 
+        filterPrivate.addEventListener('change', () => {
+            if (filterPrivate.checked) {
+                const privateOnly = allUnfollowers.filter(u => u.isPrivate);
+                renderList(privateOnly);
+            } else {
+                renderList(allUnfollowers);
+            }
+        });
+    }
+
+    function renderList(users) {
+        if (!resultsList) return; 
+        
+        resultsList.innerHTML = '';
+        if (users.length === 0) {
+            resultsList.innerHTML = '<div class="placeholder">No users found.</div>';
+            return;
+        }
+
+        users.forEach(user => {
+            const isPrivateHTML = user.isPrivate ? '<span class="badge private">Private</span>' : '';
+            const isVerifiedHTML = user.isVerified ? '<span class="badge verified">Verified</span>' : '';
+            
+            const item = document.createElement('div');
+            item.className = 'user-item';
+            item.innerHTML = `
+                <div class="user-info">
+                <span class="username">@${user.username}</span>
+                <div class="badges">${isPrivateHTML}${isVerifiedHTML}</div>
+                </div>
+                <a href="https://instagram.com/${user.username}" target="_blank" style="text-decoration:none; color:#0095f6; font-size:12px;">View</a>
+            `;
+            resultsList.appendChild(item);
+        });
+    }
+});
