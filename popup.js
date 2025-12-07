@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Scanner Logic ---
-    if (scanBtn) { // FIX: Checks if scanBtn exists before adding listener
+    if (scanBtn) { 
         scanBtn.addEventListener('click', () => {
             chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
                 const tab = tabs[0];
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Filtering Logic ---
-    if (filterPrivate) { // FIX: Checks if filterPrivate exists before adding listener
+    if (filterPrivate) { 
         filterPrivate.addEventListener('change', () => {
             if (filterPrivate.checked) {
                 const privateOnly = allUnfollowers.filter(u => u.isPrivate);
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderList(users) {
-        if (!resultsList) return; // Prevent crash if resultsList is missing
+        if (!resultsList) return;
         
         resultsList.innerHTML = '';
         if (users.length === 0) {
@@ -112,6 +112,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="badges">${isPrivateHTML}${isVerifiedHTML}</div>
                 </div>
                 <a href="https://instagram.com/${user.username}" target="_blank" style="text-decoration:none; color:#0095f6; font-size:12px;">View</a>
-            `;
-    } 
-});
+`;
+            resultsList.appendChild(item); 
+        });
+
+    }
+}); 
