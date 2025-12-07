@@ -113,3 +113,5 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <a href="https://instagram.com/${user.username}" target="_blank" style="text-decoration:none; color:#0095f6; font-size:12px;">View</a>
             `;
+    } 
+});
