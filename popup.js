@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Element Declarations (Gets elements by ID) ---
     const scanBtn = document.getElementById('scanBtn');
     const resultsList = document.getElementById('resultsList');
     const statusMsg = document.getElementById('statusMsg');
@@ -13,15 +14,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Load Saved Settings ---
     chrome.storage.local.get(['blockReels', 'blockExplore'], (result) => {
-        blockReels.checked = result.blockReels || false;
-        blockExplore.checked = result.blockExplore || false;
+        if (blockReels) blockReels.checked = result.blockReels || false;
+        if (blockExplore) blockExplore.checked = result.blockExplore || false;
     });
 
     // --- Feed Block Logic ---
     const updateFeedSettings = () => {
         const settings = {
-            blockReels: blockReels.checked,
-            blockExplore: blockExplore.checked
+            blockReels: blockReels ? blockReels.checked : false,
+            blockExplore: blockExplore ? blockExplore.checked : false
         };
         chrome.storage.local.set(settings);
         
@@ -36,12 +37,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    blockReels.addEventListener('change', updateFeedSettings);
-    blockExplore.addEventListener('change', updateFeedSettings);
+    // Attach listeners only if elements exist
+    if (blockReels) blockReels.addEventListener('change', updateFeedSettings);
+    if (blockExplore) blockExplore.addEventListener('change', updateFeedSettings);
 
 
     // --- Scanner Logic ---
-    if (scanBtn) { // Check ensures the element exists before adding listener (prevents your error)
+    if (scanBtn) { // FIX: Checks if scanBtn exists before adding listener
         scanBtn.addEventListener('click', () => {
             chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
                 const tab = tabs[0];
@@ -53,48 +55,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusMsg.textContent = "Scanning... (Do not close popup)";
                 scanBtn.disabled = true;
 
-                // Inject script if not already there, then run scan
-                chrome.scripting.executeScript({
-                    target: { tabId: tab.id },
-                    function: () => { /* Check if content script is alive */ }
-                }, () => {
-                    chrome.tabs.sendMessage(tab.id, { action: "startScan" }, (response) => {
-                        if (chrome.runtime.lastError) {
-                            // This error usually means the content script isn't active on the page.
-                            statusMsg.textContent = "Refresh page & try again. (Make sure you are logged in)";
-                            scanBtn.disabled = false;
-                        }
-                    });
+                // Send message to start scan in content.js
+                chrome.tabs.sendMessage(tab.id, { action: "startScan" }, (response) => {
+                    if (chrome.runtime.lastError) {
+                        statusMsg.textContent = "Refresh page & try again. (Make sure you are logged in)";
+                        scanBtn.disabled = false;
+                    }
                 });
             });
         });
     }
 
-
     // Listen for data back from content script
     chrome.runtime.onMessage.addListener((message) => {
         if (message.action === "scanComplete") {
-            allUnfollowers = message.data; // Expecting array of objects
+            allUnfollowers = message.data;
             renderList(allUnfollowers);
-            filterSection.style.display = 'flex';
-            statusMsg.textContent = `Found ${allUnfollowers.length} unfollowers.`;
-            scanBtn.disabled = false;
+            if (filterSection) filterSection.style.display = 'flex';
+            if (statusMsg) statusMsg.textContent = `Found ${allUnfollowers.length} unfollowers.`;
+            if (scanBtn) scanBtn.disabled = false;
         } else if (message.action === "statusUpdate") {
-            statusMsg.textContent = message.status;
+            if (statusMsg) statusMsg.textContent = message.status;
         }
     });
 
     // --- Filtering Logic ---
-    filterPrivate.addEventListener('change', () => {
-        if (filterPrivate.checked) {
-            const privateOnly = allUnfollowers.filter(u => u.isPrivate);
-            renderList(privateOnly);
-        } else {
-            renderList(allUnfollowers);
-        }
-    });
+    if (filterPrivate) { // FIX: Checks if filterPrivate exists before adding listener
+        filterPrivate.addEventListener('change', () => {
+            if (filterPrivate.checked) {
+                const privateOnly = allUnfollowers.filter(u => u.isPrivate);
+                renderList(privateOnly);
+            } else {
+                renderList(allUnfollowers);
+            }
+        });
+    }
 
     function renderList(users) {
+        if (!resultsList) return; // Prevent crash if resultsList is missing
+        
         resultsList.innerHTML = '';
         if (users.length === 0) {
             resultsList.innerHTML = '<div class="placeholder">No users found.</div>';
@@ -114,7 +113,3 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <a href="https://instagram.com/${user.username}" target="_blank" style="text-decoration:none; color:#0095f6; font-size:12px;">View</a>
             `;
-            resultsList.appendChild(item);
-        });
-    }
-});
