@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instagram Unfollower Checker</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Unfollower Checker</h1>
+      <button id="refreshBtn" class="refresh-btn">Refresh</button>
+    </header>
+
+    <div class="controls">
+      <div class="toggle-group">
+        <label class="toggle-switch">
+          <input type="checkbox" id="blockReels">
+          <span class="slider"></span>
+          <span class="label-text">Block Reels</span>
+        </label>
+      </div>
+      <div class="toggle-group">
+        <label class="toggle-switch">
+          <input type="checkbox" id="blockExplore">
+          <span class="slider"></span>
+          <span class="label-text">Block Explore</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-item">
+        <span class="stat-label">Not Following Back:</span>
+        <span id="unfollowerCount" class="stat-value">0</span>
+      </div>
+    </div>
+
+    <div id="status" class="status">
+      <p>Click "Refresh" to check for unfollowers</p>
+    </div>
+
+    <div id="unfollowerList" class="unfollower-list">
+      <!-- Unfollowers will be listed here -->
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
