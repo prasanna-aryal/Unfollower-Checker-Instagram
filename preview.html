@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Extension Popup Preview</title>
+  <link rel="stylesheet" href="popup.css">
+  <style>
+    body {
+      background: #f0f0f0;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .preview-wrapper {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .preview-title {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #262626;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-wrapper">
+    <h2 class="preview-title">Extension Popup Preview</h2>
+    <div class="container">
+      <header>
+        <h1>Unfollower Checker</h1>
+        <button id="refreshBtn" class="refresh-btn">Refresh</button>
+      </header>
+
+      <div class="controls">
+        <div class="toggle-group">
+          <label class="toggle-switch">
+            <input type="checkbox" id="blockReels">
+            <span class="slider"></span>
+            <span class="label-text">Block Reels</span>
+          </label>
+        </div>
+        <div class="toggle-group">
+          <label class="toggle-switch">
+            <input type="checkbox" id="blockExplore">
+            <span class="slider"></span>
+            <span class="label-text">Block Explore</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat-item">
+          <span class="stat-label">Not Following Back:</span>
+          <span id="unfollowerCount" class="stat-value">3</span>
+        </div>
+      </div>
+
+      <div id="status" class="status success">
+        <p>Successfully updated unfollowers list</p>
+      </div>
+
+      <div id="unfollowerList" class="unfollower-list">
+        <!-- Sample unfollowers -->
+        <div class="unfollower-item">
+          <img src="icons/default-avatar.png" alt="user1" class="unfollower-avatar">
+          <div class="unfollower-info">
+            <div class="unfollower-username">
+              <span>example_user</span>
+            </div>
+            <div class="unfollower-status">
+              <span class="status-badge following">Following</span>
+              <span class="status-badge public">Public</span>
+            </div>
+          </div>
+          <button class="unfollow-btn">Unfollow</button>
+        </div>
+
+        <div class="unfollower-item">
+          <img src="icons/default-avatar.png" alt="user2" class="unfollower-avatar">
+          <div class="unfollower-info">
+            <div class="unfollower-username">
+              <span>verified_account</span>
+              <span class="verified-badge">
+                <svg aria-label="Verified" fill="rgb(0, 149, 246)" height="12" role="img" viewBox="0 0 40 40" width="12">
+                  <path d="M19.998 3.094 14.638 0l-2.972 5.15H5.432v6.354L0 14.64 3.094 20 0 25.359l5.432 3.137v5.905h5.975L14.638 40l5.36-3.094L25.358 40l3.232-5.6h6.162v-6.01L40 25.359 36.905 20 40 14.641l-5.248-3.03v-6.46h-6.419L25.358 0l-5.36 3.094Zm7.415 11.225 2.254 2.287-11.43 11.5-6.835-6.93 2.244-2.258 4.587 4.581 9.18-9.18Z" fill-rule="evenodd"></path>
+                </svg>
+              </span>
+            </div>
+            <div class="unfollower-status">
+              <span class="status-badge following">Following</span>
+              <span class="status-badge public">Public</span>
+            </div>
+          </div>
+          <button class="unfollow-btn">Unfollow</button>
+        </div>
+
+        <div class="unfollower-item">
+          <img src="icons/default-avatar.png" alt="user3" class="unfollower-avatar">
+          <div class="unfollower-info">
+            <div class="unfollower-username">
+              <span>private_user</span>
+            </div>
+            <div class="unfollower-status">
+              <span class="status-badge following">Following</span>
+              <span class="status-badge private">Private</span>
+            </div>
+          </div>
+          <button class="unfollow-btn">Unfollow</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Simple toggle functionality for preview
+    const blockReels = document.getElementById('blockReels');
+    const blockExplore = document.getElementById('blockExplore');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const statusDiv = document.getElementById('status');
+
+    blockReels.addEventListener('change', () => {
+      console.log('Block Reels:', blockReels.checked);
+    });
+
+    blockExplore.addEventListener('change', () => {
+      console.log('Block Explore:', blockExplore.checked);
+    });
+
+    refreshBtn.addEventListener('click', () => {
+      refreshBtn.disabled = true;
+      refreshBtn.textContent = 'Refreshing...';
+      statusDiv.className = 'status';
+      statusDiv.innerHTML = '<p>Fetching data from Instagram...</p>';
+      
+      setTimeout(() => {
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = 'Refresh';
+        statusDiv.className = 'status success';
+        statusDiv.innerHTML = '<p>Successfully updated unfollowers list</p>';
+      }, 2000);
+    });
+
+    // Unfollow button handlers
+    document.querySelectorAll('.unfollow-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const username = e.target.closest('.unfollower-item').querySelector('.unfollower-username span').textContent;
+        if (confirm(`Unfollow @${username}?`)) {
+          e.target.disabled = true;
+          e.target.textContent = 'Unfollowing...';
+          setTimeout(() => {
+            e.target.closest('.unfollower-item').remove();
+            const count = parseInt(document.getElementById('unfollowerCount').textContent);
+            document.getElementById('unfollowerCount').textContent = count - 1;
+            statusDiv.className = 'status success';
+            statusDiv.innerHTML = `<p>Successfully unfollowed @${username}</p>`;
+          }, 1000);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

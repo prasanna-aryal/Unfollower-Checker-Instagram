@@ -145,7 +145,8 @@ async function fetchUserList(username, type) {
     
     // Navigate to the profile and open the followers/following dialog
     const currentPath = window.location.pathname;
-    if (!currentPath.includes(`/${username}`)) {
+    const expectedPath = `/${username}/`;
+    if (currentPath !== expectedPath && currentPath !== `/${username}`) {
       reject(new Error(`Please navigate to your profile page (@${username}) first`));
       return;
     }
@@ -175,7 +176,10 @@ async function fetchUserList(username, type) {
   });
 }
 
-// Extract users from the current page (simplified)
+// Extract users from the current page
+// Note: This is a simplified implementation that works with visible page content.
+// For a production app, you would need to use Instagram's internal GraphQL API
+// or implement a more sophisticated DOM parsing strategy.
 function extractUsersFromPage(type) {
   const users = [];
   
@@ -183,28 +187,46 @@ function extractUsersFromPage(type) {
   const userLinks = document.querySelectorAll('a[href^="/"]');
   const seenUsernames = new Set();
   
+  // List of Instagram system paths to exclude
+  const excludedPaths = [
+    'explore', 'reels', 'direct', 'accounts', 'stories', 'tv', 'p', 'reel',
+    'create', 'settings', 'notifications', 'search', 'activity', 'about',
+    'help', 'press', 'api', 'jobs', 'privacy', 'terms', 'locations', 'language'
+  ];
+  
   userLinks.forEach(link => {
     const href = link.getAttribute('href');
-    const username = href.replace(/\//g, '').split('?')[0];
+    if (!href) return;
     
-    if (username && !seenUsernames.has(username) && username.length > 0) {
-      // Check if this is a valid user link (not explore, reels, etc.)
-      if (!['explore', 'reels', 'direct', 'accounts'].includes(username)) {
-        seenUsernames.add(username);
-        
-        // Try to get additional info from nearby elements
-        const container = link.closest('[role="button"], article, li');
-        const img = container?.querySelector('img');
-        
-        users.push({
-          id: username, // Using username as ID for simplicity
-          username: username,
-          profile_pic_url: img?.src || '',
-          is_verified: container?.querySelector('[aria-label*="Verified"]') !== null,
-          is_private: container?.textContent?.includes('Private') || false
-        });
-      }
+    // Extract username (remove leading/trailing slashes and query params)
+    const pathMatch = href.match(/^\/([^\/\?]+)/);
+    if (!pathMatch) return;
+    
+    const username = pathMatch[1];
+    
+    // Skip if already seen or if it's a system path
+    if (seenUsernames.has(username) || excludedPaths.includes(username)) {
+      return;
     }
+    
+    // Basic validation: username should be alphanumeric with underscores/dots
+    if (!/^[a-zA-Z0-9._]+$/.test(username)) {
+      return;
+    }
+    
+    seenUsernames.add(username);
+    
+    // Try to get additional info from nearby elements
+    const container = link.closest('[role="button"], article, li');
+    const img = container?.querySelector('img');
+    
+    users.push({
+      id: username, // Using username as ID for simplicity
+      username: username,
+      profile_pic_url: img?.src || '',
+      is_verified: container?.querySelector('[aria-label*="Verified"]') !== null,
+      is_private: container?.textContent?.toLowerCase().includes('private') || false
+    });
   });
   
   return users.slice(0, 50); // Limit to avoid performance issues
@@ -214,14 +236,13 @@ function extractUsersFromPage(type) {
 async function unfollowUser(username) {
   return new Promise(async (resolve, reject) => {
     try {
-      // Navigate to user's profile
-      const profileUrl = `https://www.instagram.com/${username}/`;
+      const currentPath = window.location.pathname;
+      const userProfilePath = `/${username}/`;
       
       // Check if we're already on the profile
-      if (!window.location.href.includes(`/${username}`)) {
-        window.location.href = profileUrl;
-        // Wait for page load
-        await new Promise(resolve => setTimeout(resolve, 2000));
+      if (currentPath !== userProfilePath && currentPath !== `/${username}`) {
+        reject(new Error(`Please navigate to ${username}'s profile first to unfollow them.`));
+        return;
       }
       
       // Find and click the Following button
@@ -368,7 +389,8 @@ function unblockExplore() {
 
 // Add unfollow button to profile pages
 function addUnfollowButtonToProfile() {
-  if (!window.location.pathname.match(/^\/[^\/]+\/?$/)) {
+  const pathMatch = window.location.pathname.match(/^\/([^\/]+)\/?$/);
+  if (!pathMatch) {
     return; // Not a profile page
   }
   
@@ -378,7 +400,7 @@ function addUnfollowButtonToProfile() {
   );
   
   if (followingButton && !document.querySelector('.extension-unfollow-btn')) {
-    const username = window.location.pathname.replace(/\//g, '');
+    const username = pathMatch[1];
     
     const unfollowBtn = document.createElement('button');
     unfollowBtn.className = 'extension-unfollow-btn';
@@ -395,13 +417,25 @@ function addUnfollowButtonToProfile() {
     `;
     
     unfollowBtn.addEventListener('click', async () => {
+      // Note: Using confirm() as per spec, though custom modal would be better UX
       if (confirm(`Unfollow @${username}?`)) {
+        unfollowBtn.disabled = true;
+        unfollowBtn.textContent = 'Unfollowing...';
         try {
           await unfollowUser(username);
-          alert(`Successfully unfollowed @${username}`);
-          window.location.reload();
+          // Show success message instead of alert
+          unfollowBtn.textContent = 'Unfollowed!';
+          unfollowBtn.style.background = '#4caf50';
+          unfollowBtn.style.color = 'white';
+          unfollowBtn.style.borderColor = '#4caf50';
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
         } catch (error) {
-          alert(`Error: ${error.message}`);
+          unfollowBtn.disabled = false;
+          unfollowBtn.textContent = 'Quick Unfollow';
+          // Show error in console instead of alert
+          console.error('Unfollow error:', error.message);
         }
       }
     });

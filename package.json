@@ -1,7 +1,7 @@
 {
   "name": "unfollower-checker-instagram",
   "version": "1.0.0",
-  "description": "",
+  "description": "Chrome extension to track Instagram unfollowers and manage content visibility",
   "main": "background.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
