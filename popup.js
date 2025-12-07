@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Element Declarations (Gets elements by ID) ---
+    // --- Element Declarations ---
     const scanBtn = document.getElementById('scanBtn');
     const resultsList = document.getElementById('resultsList');
     const statusMsg = document.getElementById('statusMsg');
@@ -26,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         chrome.storage.local.set(settings);
         
-        // Send message to active tab to apply immediately
         chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
             if(tabs[0]) {
                 chrome.tabs.sendMessage(tabs[0].id, {
@@ -37,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // Attach listeners only if elements exist
     if (blockReels) blockReels.addEventListener('change', updateFeedSettings);
     if (blockExplore) blockExplore.addEventListener('change', updateFeedSettings);
 
@@ -55,22 +53,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusMsg.textContent = "Checking connection...";
                 scanBtn.disabled = true;
 
-                // CRITICAL: Use executeScript to ensure content script context is alive
+                // 1. Execute script to ensure content script context is alive
                 chrome.scripting.executeScript({
                     target: { tabId: tab.id },
                     func: () => { 
                         console.log("Content script environment confirmed.");
                     }
                 }, () => {
-                    // After confirmation, send the main scanning message
-                    statusMsg.textContent = "Scanning... (Do not close popup)";
-                    chrome.tabs.sendMessage(tab.id, { action: "startScan" }, (response) => {
-                        if (chrome.runtime.lastError) {
-                            console.error("Messaging failed:", chrome.runtime.lastError.message);
-                            statusMsg.textContent = "Connection error. Refresh the Instagram page and try again.";
-                            scanBtn.disabled = false;
-                        }
-                    });
+                    // 2. Add a short delay to let the messaging channel stabilize (Fixes intermittent connection error)
+                    setTimeout(() => {
+                        // 3. Send the main scanning message
+                        statusMsg.textContent = "Scanning... (Do not close popup)";
+                        chrome.tabs.sendMessage(tab.id, { action: "startScan" }, (response) => {
+                            if (chrome.runtime.lastError) {
+                                console.error("Messaging failed:", chrome.runtime.lastError.message);
+                                statusMsg.textContent = "Connection error. Refresh the Instagram page and try again.";
+                                scanBtn.disabled = false;
+                            }
+                        });
+                    }, 500);
                 });
             });
         });
